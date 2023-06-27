@@ -95,6 +95,13 @@ void SimpleProjectAudioProcessor::prepareToPlay (double sampleRate, int samplesP
 {
     // Use this method as the place to do any pre-playback
     // initialisation that you need..
+    juce::dsp::ProcessSpec spec; 
+    spec.maximumBlockSize = samplesPerBlock; 
+    spec.numChannels = 1; 
+    spec.sampleRate = sampleRate; 
+    leftchain.prepare(spec); 
+    rightchain.prepare(spec);
+
 }
 
 void SimpleProjectAudioProcessor::releaseResources()
@@ -150,12 +157,20 @@ void SimpleProjectAudioProcessor::processBlock (juce::AudioBuffer<float>& buffer
     // the samples and the outer loop is handling the channels.
     // Alternatively, you can process the samples with the channels
     // interleaved by keeping the same state.
-    for (int channel = 0; channel < totalNumInputChannels; ++channel)
-    {
-        auto* channelData = buffer.getWritePointer (channel);
+    // for (int channel = 0; channel < totalNumInputChannels; ++channel)
+    // {
+    //    auto* channelData = buffer.getWritePointer (channel);
 
         // ..do something to the data...
-    }
+    // }
+    juce::dsp::AudioBlock<float> block(buffer); 
+    auto leftBlock = block.getSingleChannelBlock(0);
+    auto rightBlock = block.getSingleChannelBlock(0);
+    juce::dsp::ProcessContextReplacing<float> leftContext(leftBlock);
+    juce::dsp::ProcessContextReplacing<float> rightContext(rightBlock);
+
+    leftchain.process(leftContext); 
+    rightchain.process(rightContext); 
 }
 
 //==============================================================================
